@@ -4,6 +4,8 @@ import { basename, dirname, extname, resolve } from 'path'
 export function getCompanionJsonPathForMediaFile(mediaFilePath: string): string|null {
   const directoryPath = dirname(mediaFilePath);
   const mediaFileExtension = extname(mediaFilePath);
+  const mediaFileExtensionWithLowerCase = mediaFileExtension.toLowerCase();
+  const mediaFileExtensionWithUpperCase = mediaFileExtension.toUpperCase();
   let mediaFileNameWithoutExtension = basename(mediaFilePath, mediaFileExtension);
 
   // Sometimes (if the photo has been edited inside Google Photos) we get files with a `-edited` suffix
@@ -15,33 +17,53 @@ export function getCompanionJsonPathForMediaFile(mediaFilePath: string): string|
   // the JSON file is sometimes `foo.json` but sometimes it's `foo.jpg.json`. Here we start building up a list of potential
   // JSON filenames so that we can try to find them later
   const potentialJsonFileNames: string[] = [
+    // "foo.json"
     `${mediaFileNameWithoutExtension}.json`,
-    `${mediaFileNameWithoutExtension}${mediaFileExtension}.json`,
+
+    // "foo.jpg.json" for "foo.jpg"
+    `${mediaFileNameWithoutExtension}${mediaFileExtensionWithLowerCase}.json`,
+
+    // "foo.JPG.json" for "foo.jpg"
+    `${mediaFileNameWithoutExtension}${mediaFileExtensionWithUpperCase}.json`,
+
+    // "foo..json" for "foo.jpg"
+    `${mediaFileNameWithoutExtension}..json`,
+
+    // "foo.j.json" for "foo.jpg"
+    `${mediaFileNameWithoutExtension}.j.json`,
+
+    // "foo.jp.json" for "foo.jpg"
+    `${mediaFileNameWithoutExtension}.jp.json`,
   ];
 
   // Another edge case which seems to be quite inconsistent occurs when we have media files containing a number suffix for example "foo(1).jpg"
   // In this case, we don't get "foo(1).json" nor "foo(1).jpg.json". Instead, we strangely get "foo.jpg(1).json".
   // We can use a regex to look for this edge case and add that to the potential JSON filenames to look out for
-  const nameWithCounterMatch = mediaFileNameWithoutExtension.match(/(?<name>.*)(?<counter>\(\d+\))$/);
+  const nameWithCounterMatch = mediaFileNameWithoutExtension.match(
+    /(?<name>.*)(?<counter>\(\d+\))$/
+  );
   if (nameWithCounterMatch) {
-    const name = nameWithCounterMatch?.groups?.['name'];
-    const counter = nameWithCounterMatch?.groups?.['counter'];
-    potentialJsonFileNames.push(`${name}${mediaFileExtension}${counter}.json`);
+    const name = nameWithCounterMatch?.groups?.["name"];
+    const counter = nameWithCounterMatch?.groups?.["counter"];
+
+    // "foo.jpg(1).json" for "foo(1).jpg"
+    potentialJsonFileNames.push(
+      `${name}${mediaFileExtensionWithLowerCase}${counter}.json`
+    );
+
+    // "foo.JPG(1).json" for "foo(1).jpg"
+    potentialJsonFileNames.push(
+      `${name}${mediaFileExtensionWithUpperCase}${counter}.json`
+    );
+
+    // "fo(1).json" for "foo(1).jpg"
+    potentialJsonFileNames.push(`${name?.slice(0, -1)}${counter}.json`);
   }
 
-  // Sometimes the media filename ends with extra dash (eg. filename_n-.jpg + filename_n.json)
-  const endsWithExtraDash = mediaFileNameWithoutExtension.endsWith('_n-');
-
-  // Sometimes the media filename ends with extra `n` char (eg. filename_n.jpg + filename_.json)
-  const endsWithExtraNChar = mediaFileNameWithoutExtension.endsWith('_n');
-
-  // And sometimes the media filename has extra underscore in it (e.g. filename_.jpg + filename.json)
-  const endsWithExtraUnderscore = mediaFileNameWithoutExtension.endsWith('_');
-
-  if (endsWithExtraDash || endsWithExtraNChar || endsWithExtraUnderscore) {
-    // We need to remove that extra char at the end
-    potentialJsonFileNames.push(`${mediaFileNameWithoutExtension.slice(0, -1)}.json`);
-  }
+  //  "fo.jpg" for "foo.jpg"
+  potentialJsonFileNames.push(
+    `${mediaFileNameWithoutExtension.slice(0, -1)}.json`
+  );
 
   // Now look to see if we have a JSON file in the same directory as the image for any of the potential JSON file names
   // that we identified earlier

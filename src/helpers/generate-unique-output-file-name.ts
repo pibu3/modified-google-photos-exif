@@ -17,9 +17,16 @@ export function generateUniqueOutputFileName(filePath: string, allUsedFileNamesL
   const originalFileNameWithoutExtension = basename(filePath, originalFileExtension);
   let counter = 1;
 
-  let outputFileName = originalFileName;
+  // add the parent directory of the input file to outputFileName
+  const splittedFilePath = filePath.split("/");
+  let parentDirName = "";
+  if (splittedFilePath.length - 2 >= 0) {
+    parentDirName = splittedFilePath[splittedFilePath.length - 2] + "/";
+  }
+
+  let outputFileName = parentDirName + originalFileName;
   while (allUsedFileNamesLowerCased.includes(outputFileName.toLowerCase())) {
-    outputFileName = `${originalFileNameWithoutExtension}_${counter}${originalFileExtension}`;
+    outputFileName = `${parentDirName}${originalFileNameWithoutExtension}_${counter}${originalFileExtension}`;
     counter++;
   }
   return outputFileName;

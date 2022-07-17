@@ -1,12 +1,12 @@
 {
-  "name": "google-photos-exif",
+  "name": "modified-google-photos-exif",
   "description": "A tool to populate missing DateTimeOriginal EXIF metadata in Google Photos takeout, using Google's JSON metadata.",
-  "version": "2.0.0",
-  "author": "Matt Wilson @mattwilson1024",
+  "version": "1.0.0",
+  "author": "@pibu3",
   "bin": {
     "google-photos-exif": "./bin/run"
   },
-  "bugs": "https://github.com/mattwilson1024/google-photos-exif/issues",
+  "bugs": "https://github.com/pibu3/modified-google-photos-exif/issues",
   "dependencies": {
     "@oclif/command": "^1",
     "@oclif/config": "^1",
@@ -30,7 +30,7 @@
     "/bin",
     "/lib"
   ],
-  "homepage": "https://github.com/mattwilson1024/google-photos-exif",
+  "homepage": "https://github.com/pibu3/modified-google-photos-exif",
   "keywords": [
     "oclif"
   ],
@@ -39,7 +39,7 @@
   "oclif": {
     "bin": "google-photos-exif"
   },
-  "repository": "mattwilson1024/google-photos-exif",
+  "repository": "pibu3/modified-google-photos-exif",
   "scripts": {
     "posttest": "eslint . --ext .ts --config .eslintrc",
     "prepack": "rm -rf lib && tsc -b && oclif-dev readme",

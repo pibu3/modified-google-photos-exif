@@ -123,3 +123,7 @@ dist
 
 
 .idea
+
+# test
+test/
+nohup.out
