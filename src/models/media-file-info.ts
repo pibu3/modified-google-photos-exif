@@ -1,3 +1,5 @@
+import { string } from "@oclif/command/lib/flags";
+
 export interface MediaFileInfo {
   mediaFilePath: string;
   mediaFileName: string;
@@ -10,4 +12,7 @@ export interface MediaFileInfo {
 
   outputFileName: string;
   outputFilePath: string;
+
+  errorMediaFilePath: string;
+  errorJsonFilePath: string|null;
 }

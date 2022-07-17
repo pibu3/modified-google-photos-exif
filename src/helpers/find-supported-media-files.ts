@@ -1,15 +1,16 @@
 import { existsSync } from 'fs';
-import { basename, extname, resolve } from 'path';
+import { basename, extname, resolve, dirname} from 'path';
 import { CONFIG } from '../config';
 import { MediaFileInfo } from '../models/media-file-info';
 import { doesFileSupportExif } from './does-file-support-exif';
 import { findFilesWithExtensionRecursively } from './find-files-with-extension-recursively';
 import { generateUniqueOutputFileName } from './generate-unique-output-file-name';
 import { getCompanionJsonPathForMediaFile } from './get-companion-json-path-for-media-file';
+import { Directories } from '../models/directories'
 
-export async function findSupportedMediaFiles(inputDir: string, outputDir: string, jsonRequired: boolean): Promise<MediaFileInfo[]> {
+export async function findSupportedMediaFiles(directories: Directories, jsonRequired: boolean): Promise<MediaFileInfo[]> {
   const supportedMediaFileExtensions = CONFIG.supportedMediaFileTypes.map(fileType => fileType.extension);
-  const mediaFilePaths = await findFilesWithExtensionRecursively(inputDir, supportedMediaFileExtensions);
+  const mediaFilePaths = await findFilesWithExtensionRecursively(directories.input, supportedMediaFileExtensions);
 
   const mediaFiles: MediaFileInfo[] = [];
   const allUsedOutputFilesLowerCased: string[] = [];
@@ -30,19 +31,24 @@ export async function findSupportedMediaFiles(inputDir: string, outputDir: strin
       }
     }
 
-    const outputFileName = generateUniqueOutputFileName(mediaFilePath, allUsedOutputFilesLowerCased);
-    const outputFilePath = resolve(outputDir, outputFileName);
+    const outputFileName = generateUniqueOutputFileName(directories.input, mediaFilePath, allUsedOutputFilesLowerCased);
+    const outputFilePath = resolve(directories.output, outputFileName);
+
+    const errorMediaFilePath = resolve(directories.error, outputFileName);
+    const errorJsonFilePath = jsonFileName ? resolve(directories.error, dirname(outputFileName) + "/" + jsonFileName) : null;
 
     mediaFiles.push({
       mediaFilePath,
-      mediaFileName,
+      mediaFileName, // e.g. "foo.jpg"
       mediaFileExtension,
       supportsExif,
       jsonFilePath,
       jsonFileName,
       jsonFileExists,
-      outputFileName,
-      outputFilePath,
+      outputFileName, // including the parent directory e.g. "Photo from 2022/foo.jpg"
+      outputFilePath, // e.g. "/XXX/Photo from 2022/Photo from 2022/foo.jpg"
+      errorMediaFilePath,  // e.g. "/XXX/Error/Photo from 2022/Photo from 2022/foo.jpg"
+      errorJsonFilePath, // e.g. "/XXX/Error/Photo from 2022/Photo from 2022/foo.json"
     });
     allUsedOutputFilesLowerCased.push(outputFileName.toLowerCase());
   }

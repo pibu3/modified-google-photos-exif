@@ -2,11 +2,11 @@ import { exiftool } from 'exiftool-vendored';
 import { doesFileSupportExif } from './does-file-support-exif';
 import { existsSync, promises as fspromises } from 'fs';
 import { MediaFileInfo } from '../models/media-file-info';
-import { resolve } from 'path';
+import { dirname } from "path";
 
-const { unlink, copyFile } = fspromises;
+const { unlink, copyFile, mkdir } = fspromises;
 
-export async function updateExifMetadata(fileInfo: MediaFileInfo, timeTaken: string, errorDir: string, jstExif: boolean): Promise<void> {
+export async function updateExifMetadata(fileInfo: MediaFileInfo, timeTaken: string, jstExif: boolean): Promise<void> {
   if (!doesFileSupportExif(fileInfo.outputFilePath)) {
     return;
   }
@@ -40,9 +40,16 @@ export async function updateExifMetadata(fileInfo: MediaFileInfo, timeTaken: str
       await unlink(`${fileInfo.outputFilePath}_original`); // exiftool will rename the old file to {filename}_original, we can delete that
     }
 
-    await copyFile(fileInfo.mediaFilePath,  resolve(errorDir, fileInfo.mediaFileName));
-    if (fileInfo.jsonFileExists && fileInfo.jsonFileName && fileInfo.jsonFilePath) {
-      await copyFile(fileInfo.jsonFilePath, resolve(errorDir, fileInfo.jsonFileName));
+    if (!existsSync(dirname(fileInfo.errorMediaFilePath))) {
+      await mkdir(dirname(fileInfo.errorMediaFilePath), { recursive: true });
+    }
+    await copyFile(fileInfo.mediaFilePath,  fileInfo.errorMediaFilePath);
+
+    if (fileInfo.jsonFileExists && fileInfo.jsonFileName && fileInfo.jsonFilePath && fileInfo.errorJsonFilePath) {
+      if (!existsSync(dirname(fileInfo.errorJsonFilePath))) {
+        await mkdir(dirname(fileInfo.errorJsonFilePath), { recursive: true });
+      }
+      await copyFile(fileInfo.jsonFilePath, fileInfo.errorJsonFilePath);
     }
   }
 }

@@ -1,4 +1,4 @@
-import { basename, extname } from 'path';
+import { basename, extname, dirname, relative, resolve } from 'path';
 
 /**
  * Given the name of a file that we want to copy to the output directory, generate a unique output filename.
@@ -11,22 +11,19 @@ import { basename, extname } from 'path';
  *
  * For example if the array contains `picture.jpg` and `picture_1.jpg` then this will return `picture_2.jpg`
  */
-export function generateUniqueOutputFileName(filePath: string, allUsedFileNamesLowerCased: string[]): string {
+export function generateUniqueOutputFileName(inputDir: string, filePath: string, allUsedFileNamesLowerCased: string[]): string {
   const originalFileName = basename(filePath);
   const originalFileExtension = extname(filePath);
   const originalFileNameWithoutExtension = basename(filePath, originalFileExtension);
   let counter = 1;
 
   // add the parent directory of the input file to outputFileName
-  const splittedFilePath = filePath.split("/");
-  let parentDirName = "";
-  if (splittedFilePath.length - 2 >= 0) {
-    parentDirName = splittedFilePath[splittedFilePath.length - 2] + "/";
-  }
+  const parentDir = dirname(relative(inputDir, filePath));
+  let outputFileName = parentDir + "/" + originalFileName;
+  // console.log("parentDir = " + parentDir + ", outputFileName = " + outputFileName);// eslint-disable-line no-console
 
-  let outputFileName = parentDirName + originalFileName;
   while (allUsedFileNamesLowerCased.includes(outputFileName.toLowerCase())) {
-    outputFileName = `${parentDirName}${originalFileNameWithoutExtension}_${counter}${originalFileExtension}`;
+    outputFileName = `${parentDir}/${originalFileNameWithoutExtension}_${counter}${originalFileExtension}`;
     counter++;
   }
   return outputFileName;
