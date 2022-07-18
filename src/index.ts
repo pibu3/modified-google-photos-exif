@@ -34,16 +34,18 @@ class GooglePhotosExif extends Command {
       description: 'Directory for any files that have bad EXIF data - including the matching metadata files',
       required: true,
     }),
+    /*
     "not-empty-allowed": flags.boolean({
       description: 'Flag for allowing the output/error directory to be not empty',
       required: false,
     }),
+    */
     "json-required": flags.boolean({
       description: 'Flag for processing only the media file with the json',
       required: false,
     }),
-    "jst-exif": flags.boolean({
-      description: 'Flag for updating EXIF data with JST',
+    "exif-with-jst": flags.boolean({
+      description: 'Flag for updating EXIF data with JST(+09:00)',
       required: false,
     }),
   }
@@ -57,23 +59,25 @@ class GooglePhotosExif extends Command {
     const { inputDir, outputDir, errorDir } = flags;
 
     let enabledFlags = '';
+    /*
     const outputDirIsNotEmpty = flags["not-empty-allowed"];
     if (outputDirIsNotEmpty) {
       enabledFlags += "not-empty-allowed ";
     }
+    */
     const jsonRequired = flags["json-required"];
     if (jsonRequired) {
       enabledFlags += "json-required ";
     }
-    const jstExif = flags["jst-exif"];
+    const jstExif = flags["exif-with-jst"];
     if (jsonRequired) {
-      enabledFlags += "jst-exif ";
+      enabledFlags += "exif-with-jst ";
     }
     this.log('flags: ' + enabledFlags);
 
     try {
       const directories = this.determineDirectoryPaths(inputDir, outputDir, errorDir);
-      await this.prepareDirectories(directories, outputDirIsNotEmpty);
+      await this.prepareDirectories(directories, true);
       await this.processMediaFiles(directories, jsonRequired, jstExif);
     } catch (error) {
       this.error(error);
@@ -184,7 +188,7 @@ class GooglePhotosExif extends Command {
       const photoTimeTaken = await readPhotoTakenTimeFromGoogleJson(mediaFile);
 
       if (photoTimeTaken) {
-        this.log(" Found json file: " + mediaFile.jsonFileName);
+        // this.log(" Found json file: " + mediaFile.jsonFileName);
 
         if (mediaFile.supportsExif) {
           // const hasExifDate = await doesFileHaveExifDate(mediaFile.mediaFilePath);
@@ -198,7 +202,7 @@ class GooglePhotosExif extends Command {
               photoTimeTaken,
               jstExif
             );
-            this.log(` Writing "DateTimeOriginal" EXIF metadata`);
+            this.log(` Writing "DateTimeOriginal" EXIF metadata: ${mediaFile.jsonFileName}`);
             fileNamesWithEditedExif.push(mediaFile.outputFileName);
           }
         }

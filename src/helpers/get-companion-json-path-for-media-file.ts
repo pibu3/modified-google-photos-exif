@@ -17,7 +17,7 @@ export function getCompanionJsonPathForMediaFile(mediaFilePath: string): string|
   // the JSON file is sometimes `foo.json` but sometimes it's `foo.jpg.json`. Here we start building up a list of potential
   // JSON filenames so that we can try to find them later
   const potentialJsonFileNames: string[] = [
-    // "foo.json"
+    // "foo.json" for "foo.jpg"
     `${mediaFileNameWithoutExtension}.json`,
 
     // "foo.jpg.json" for "foo.jpg"
@@ -60,7 +60,7 @@ export function getCompanionJsonPathForMediaFile(mediaFilePath: string): string|
     potentialJsonFileNames.push(`${name?.slice(0, -1)}${counter}.json`);
   }
 
-  //  "fo.jpg" for "foo.jpg"
+  //  "fo.json" for "foo.jpg"
   potentialJsonFileNames.push(
     `${mediaFileNameWithoutExtension.slice(0, -1)}.json`
   );
